@@ -1,10 +1,10 @@
 # vue Diff算法 
 
 ### 名词解释
-#### 虚拟DOM （virtual DOM）就是在js中模拟DOM对象树来优化DOM操作的一种技术或思路。
-#### DOM (document object model) 文档对象模型，在浏览器中可通过 js 来操作DOM
-#### VNode可以理解为vue框架的虚拟dom的基类，通过 new 实例化得到 VNode对象
-```
+ `虚拟DOM` （virtual DOM）就是在js中模拟DOM对象树来优化DOM操作的一种技术或思路。
+ `DOM` (document object model) 文档对象模型，在浏览器中可通过 js 来操作DOM
+ `VNode` 可以理解为vue框架的虚拟dom的基类，通过 new 实例化得到 VNode对象
+
 VNode对象 主要包括一下属性:
 `tag`: 当前节点的标签名
 `data`: 当前节点的数据对象，具体包含哪些字段可以参考vue源码types/vnode.d.ts中对VNodeData的定义
@@ -17,11 +17,12 @@ VNode对象 主要包括一下属性:
 `isStatic`: 静态节点的标识
 `isRootInsert`: 是否作为根节点插入，被<transition>包裹的节点，该属性的值为false
 `isComment`: 当前节点是否是注释节点
-```
 
-## 主要过程：patch -> patchVnode -> updateChildren
+
+主要过程：patch -> patchVnode -> updateChildren
 	
 ## 代码分析
+patch 判断两vnode是否为同一节点，需要深层次比对，若是进行深度的比较，得出最小差异，否则直接删除旧有DOM节点，创建新的DOM节点
 ``` javascript
 	patch(oldVnode, vnode) {
 		// 只有oldVnode, 销毁老节点
@@ -29,7 +30,7 @@ VNode对象 主要包括一下属性:
 			api.invokeDestroyHook(oldVnode)
 		}
 
-		// 只有vnode, 新建节点
+		// 只有vnode, 新建节点 （首次渲染）
 		if (!oldVnode && vnode) {
 			var oEl = oldVnode.el
 			var parentEle = api.parentNode(oEl)
@@ -101,39 +102,51 @@ VNode对象 主要包括一下属性:
   }
   ```
 
-
+两节点比较
+patchVnode的规则:
+1.如果新旧VNode都是静态的，同时它们的key相同（代表同一节点），并且新的VNode是clone或者是标记了once（标记v-once属性，只渲染一次），那么只需要替换elm以及componentInstance即可。
+2.新老节点均有children子节点，则对子节点进行diff操作，调用updateChildren，这个updateChildren也是diff的核心。
+3.如果老节点没有子节点而新节点存在子节点，先清空老节点DOM的文本内容，然后为当前DOM节点加入子节点。
+4.当新节点没有子节点而老节点有子节点的时候，则移除该DOM节点的所有子节点。
+5.当新老节点都无子节点的时候，只是文本的替换。
 ``` javascript
-	// 两节点比较
-	function patchVnode(oldVnode, vnode) {
-		var oldCh = oldVnode.children
-		var ch = vnode.children
 
-		if (oldVnode === vnode) {
-			return
-		}
-     
-		if (oldVnode.text !== null && vnode.text !== null && oldVnode.text !== vnode.text) {
-        // 两节点为文本节点，且不相同，则进行替换
+     function patchVnode(oldVnode, vnode) {
+	var oldCh = oldVnode.children
+	var ch = vnode.children
+
+	if (oldVnode === vnode) {
+	    return
+	}
+
+	if (oldVnode.text !== null && vnode.text !== null && oldVnode.text !== vnode.text) {
+        	// 两节点为文本节点，且不相同，则进行替换
 	        api.setTextContent(el, vnode.text)
 	  } else {
-        // 进一步判断子节点
-	      updateEle(el, vnode, oldVnode)
-	    	if (oldCh && ch && oldCh !== ch) {
-          // 两节点都有子节点，进行 updateChildren，判断子节点是否发生改变，找到两节点之间的差异
-		    	updateChildren(el, oldCh, ch)
-		    }else if (ch){
-          // 只有vnode有子节点，新建该子节点
-		    	createEle(vnode) //create el's children dom
-		    }else if (oldCh){
-          // 只有oldVnode有子节点，直接删除该子节点
-		    	api.removeChildren(el)
-		    }
+        	// 进一步判断子节点
+	      	updateEle(el, vnode, oldVnode)
+	    if (oldCh && ch && oldCh !== ch) {
+          	// 两节点都有子节点，进行 updateChildren，判断子节点是否发生改变，找到两节点之间的差异
+		updateChildren(el, oldCh, ch)
+	    }else if (ch){
+		// 只有vnode有子节点，新建该子节点
+		createEle(vnode) //create el's children dom
+	    }else if (oldCh){
+		// 只有oldVnode有子节点，直接删除该子节点
+		api.removeChildren(el)
+	    }
 	  }
 	}
 ```
 
+ ** 核心内容 **
+ updateChildren
+ 分为设置key和不设置key两种方式：
+  1.不设key，newCh和oldCh只会进行头尾两端的相互比较
+  2.设key，从用key生成的对象oldKeyToIdx中查找匹配的节点，通过查找、移动节点以更高效的利用dom，不会出现不必要的删除和新建节点
+ 目前是两种方式结合，当头尾两端没查找到与`newStartIdx`相匹配的节点，则为oldCh节点设置key      
+
 ``` javascript
-  ** 核心内容 **
 	updateChildren (parentElm, oldCh, newCh) {
 	    let oldStartIdx = 0, newStartIdx = 0
 	    let oldEndIdx = oldCh.length - 1
@@ -268,12 +281,14 @@ VNode对象 主要包括一下属性:
 	}
   ```
   
+  详细流程图（自己画的）
+  
+  
 ## 其他 （react & vue diff区别）
-
-	 react是批量更新Component，做完整个Diff之后再做DOM操作。
-	 Vue是即时移动或操作DOM，需要两个数组维护startIndex 和 endIndex
+ react是批量更新Component，做完整个Diff之后再做DOM操作。
+ Vue是即时移动或操作DOM，需要两个数组维护startIndex 和 endIndex
  
  
- ** 参考：[https://github.com/aooy/blog/issues/2](https://github.com/aooy/blog/issues/2)**
+ **参考：[https://github.com/aooy/blog/issues/2](https://github.com/aooy/blog/issues/2)**
  
- ** ps: 部分注释是根据自己的理解，如有不对，请指出，谢谢指教 **
+ **注意: 该文中的代码，不完全是vue 源码，是参考其他代码改动，可以和源码一起看，文中注释是根据自己的理解添加的，如有不对，请指出，谢谢指教**
