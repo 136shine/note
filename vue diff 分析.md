@@ -283,7 +283,7 @@ patchVnode的规则:
   ```
   
   详细流程图（自己画的）
-  ![diff-flow](../img/vue - diff.png)
+  ![diff-flow](/img/vue-diff.png)
   
   
 ## 其他 （react & vue diff区别）
