@@ -6,17 +6,17 @@
  3. `VNode` 可以理解为vue框架的虚拟dom的基类，通过 new 实例化得到 VNode对象
 
 VNode对象 主要包括一下属性:
-*`tag`: 当前节点的标签名
-*`data`: 当前节点的数据对象，具体包含哪些字段可以参考vue源码types/vnode.d.ts中对VNodeData的定义
-*`children`: 数组类型，包含了当前节点的子节点
-*`text`: 当前节点的文本，一般文本节点或注释节点会有该属性
-*`elm`: 当前虚拟节点对应的真实的dom节点
-*`key`: 节点的key属性，用于作为节点的标识，有利于patch的优化
-*`child`: 当前节点对应的组件实例
-*`parent`: 组件的占位节点
-*`isStatic`: 静态节点的标识
-*`isRootInsert`: 是否作为根节点插入，被<transition>包裹的节点，该属性的值为false
-*`isComment`: 当前节点是否是注释节点
+* `tag`: 当前节点的标签名
+* `data`: 当前节点的数据对象，具体包含哪些字段可以参考vue源码types/vnode.d.ts中对VNodeData的定义
+* `children`: 数组类型，包含了当前节点的子节点
+* `text`: 当前节点的文本，一般文本节点或注释节点会有该属性
+* `elm`: 当前虚拟节点对应的真实的dom节点
+* `key`: 节点的key属性，用于作为节点的标识，有利于patch的优化
+* `child`: 当前节点对应的组件实例
+* `parent`: 组件的占位节点
+* `isStatic`: 静态节点的标识
+* `isRootInsert`: 是否作为根节点插入，被<transition>包裹的节点，该属性的值为false
+* `isComment`: 当前节点是否是注释节点
 
 
 **主要过程：patch -> patchVnode -> updateChildren**
@@ -283,7 +283,7 @@ patchVnode的规则:
   ```
   
   详细流程图（自己画的）
-  ![diff-flow](../img/vue-diff.png)
+  ![diff-flow](../img/vue - diff.png)
   
   
 ## 其他 （react & vue diff区别）
