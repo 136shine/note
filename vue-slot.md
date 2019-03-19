@@ -85,5 +85,5 @@
 		</todo-list>
     ```
     
-**ps: 详细内容可参考 官网：[slot](https://cn.vuejs.org/v2/guide/components-slots.html)
-以及之前的一篇blog [vue2.0 slot](https://www.cnblogs.com/136asdxxl/p/8337551.html)**
+**ps: 详细内容可参考 官网：[插槽 https://cn.vuejs.org/v2/guide/components-slots.html](https://cn.vuejs.org/v2/guide/components-slots.html)
+以及之前的一篇blog [vue2.0 之 slot 内容分发](https://www.cnblogs.com/136asdxxl/p/8337551.html)**
