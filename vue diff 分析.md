@@ -5,23 +5,24 @@
 #### DOM (document object model) 文档对象模型，在浏览器中可通过 js 来操作DOM
 #### VNode可以理解为vue框架的虚拟dom的基类，通过 new 实例化得到 VNode对象
 ```
-VNode对象 主要包括一下属性
-	tag: 当前节点的标签名
-	data: 当前节点的数据对象，具体包含哪些字段可以参考vue源码types/vnode.d.ts中对VNodeData的定义
-	children: 数组类型，包含了当前节点的子节点
-	text: 当前节点的文本，一般文本节点或注释节点会有该属性
-	elm: 当前虚拟节点对应的真实的dom节点
-	key: 节点的key属性，用于作为节点的标识，有利于patch的优化
-	child: 当前节点对应的组件实例
-	parent: 组件的占位节点
-	isStatic: 静态节点的标识
-	isRootInsert: 是否作为根节点插入，被<transition>包裹的节点，该属性的值为false
-	isComment: 当前节点是否是注释节点
+VNode对象 主要包括一下属性:
+`tag`: 当前节点的标签名
+`data`: 当前节点的数据对象，具体包含哪些字段可以参考vue源码types/vnode.d.ts中对VNodeData的定义
+`children`: 数组类型，包含了当前节点的子节点
+`text`: 当前节点的文本，一般文本节点或注释节点会有该属性
+`elm`: 当前虚拟节点对应的真实的dom节点
+`key`: 节点的key属性，用于作为节点的标识，有利于patch的优化
+`child`: 当前节点对应的组件实例
+`parent`: 组件的占位节点
+`isStatic`: 静态节点的标识
+`isRootInsert`: 是否作为根节点插入，被<transition>包裹的节点，该属性的值为false
+`isComment`: 当前节点是否是注释节点
 ```
 
 ## 主要过程：patch -> patchVnode -> updateChildren
 	
-## 代码
+## 代码分析
+``` javascript
 	patch(oldVnode, vnode) {
 		// 只有oldVnode, 销毁老节点
 		if (oldVnode && !vnode) {
@@ -58,12 +59,50 @@ VNode对象 主要包括一下属性
 		return vnode
 	}
 
-	function sameVnode(oldVnode, vnode) {
-		if (oldVnode.key === vnode.key && oldVnode.elm === vnode.elm) {
-			return true
-		}
-	}
+```
 
+  vue 源码中的详细的判断两个`vnode`是不是同一节点，需要同时具备以下条件：
+  1、两个VNode的tag、key、isComment都相同
+  2、同时定义或未定义data的时候
+  3、若标签为input则type必须相同
+  ``` javascript
+	function sameVnode (a, b) {
+	  return (
+	    a.key === b.key && (
+	      (
+	        a.tag === b.tag &&
+	        a.isComment === b.isComment &&
+	        isDef(a.data) === isDef(b.data) &&
+	        sameInputType(a, b)
+	      ) || (
+	        isTrue(a.isAsyncPlaceholder) &&
+	        a.asyncFactory === b.asyncFactory &&
+	        isUndef(b.asyncFactory.error)
+	      )
+	    )
+	  )
+	}
+  
+     function sameInputType (a, b) {
+	  if (a.tag !== 'input') return true
+	  let i
+	  const typeA = isDef(i = a.data) && isDef(i = i.attrs) && i.type
+	  const typeB = isDef(i = b.data) && isDef(i = i.attrs) && i.type
+	  return typeA === typeB || isTextInputType(typeA) && isTextInputType(typeB)
+     }
+  ```
+  
+  简单版（主要关注的属性，未考虑复杂场景）
+  ``` javascript
+  function sameVnode(oldVnode, vnode) {
+	if (oldVnode.key === vnode.key && oldVnode.elm === vnode.elm) {
+		return true
+	}
+  }
+  ```
+
+
+``` javascript
 	// 两节点比较
 	function patchVnode(oldVnode, vnode) {
 		var oldCh = oldVnode.children
@@ -91,7 +130,9 @@ VNode对象 主要包括一下属性
 		    }
 	  }
 	}
-  
+```
+
+``` javascript
   ** 核心内容 **
 	updateChildren (parentElm, oldCh, newCh) {
 	    let oldStartIdx = 0, newStartIdx = 0
@@ -173,39 +214,8 @@ VNode对象 主要包括一下属性
         	// newVnode.children 先遍历完成，多余的 oldVnode.children 节点删除掉
             removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx)
         }
-	}
-
-
-  vue 源码中的详细的判断两个`vnode`是不是同一节点，需要同时具备以下条件：
-  1、两个VNode的tag、key、isComment都相同
-  2、同时定义或未定义data的时候
-  3、若标签为input则type必须相同
-  ``` javascript
-	function sameVnode (a, b) {
-	  return (
-	    a.key === b.key && (
-	      (
-	        a.tag === b.tag &&
-	        a.isComment === b.isComment &&
-	        isDef(a.data) === isDef(b.data) &&
-	        sameInputType(a, b)
-	      ) || (
-	        isTrue(a.isAsyncPlaceholder) &&
-	        a.asyncFactory === b.asyncFactory &&
-	        isUndef(b.asyncFactory.error)
-	      )
-	    )
-	  )
-	}
-  
-  function sameInputType (a, b) {
-	  if (a.tag !== 'input') return true
-	  let i
-	  const typeA = isDef(i = a.data) && isDef(i = i.attrs) && i.type
-	  const typeB = isDef(i = b.data) && isDef(i = i.attrs) && i.type
-	  return typeA === typeB || isTextInputType(typeA) && isTextInputType(typeB)
-	}
-  ```
+}
+```
   
   一些主要的 DOM API 操作，参考aooy的代码，实际上是DOM API 的封装
   ``` javascript
