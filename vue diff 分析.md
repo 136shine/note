@@ -1,9 +1,9 @@
 # vue Diff算法 
 
 ### 名词解释
- `虚拟DOM` （virtual DOM）就是在js中模拟DOM对象树来优化DOM操作的一种技术或思路。
- `DOM` (document object model) 文档对象模型，在浏览器中可通过 js 来操作DOM
- `VNode` 可以理解为vue框架的虚拟dom的基类，通过 new 实例化得到 VNode对象
+ 1. `虚拟DOM` （virtual DOM）就是在js中模拟DOM对象树来优化DOM操作的一种技术或思路。
+ 2. `DOM` (document object model) 文档对象模型，在浏览器中可通过 js 来操作DOM
+ 3. `VNode` 可以理解为vue框架的虚拟dom的基类，通过 new 实例化得到 VNode对象
 
 VNode对象 主要包括一下属性:
 `tag`: 当前节点的标签名
@@ -19,7 +19,7 @@ VNode对象 主要包括一下属性:
 `isComment`: 当前节点是否是注释节点
 
 
-主要过程：patch -> patchVnode -> updateChildren
+**主要过程：patch -> patchVnode -> updateChildren**
 	
 ## 代码分析
 patch 判断两vnode是否为同一节点，需要深层次比对，若是进行深度的比较，得出最小差异，否则直接删除旧有DOM节点，创建新的DOM节点
@@ -63,9 +63,9 @@ patch 判断两vnode是否为同一节点，需要深层次比对，若是进行
 ```
 
   vue 源码中的详细的判断两个`vnode`是不是同一节点，需要同时具备以下条件：
-  1、两个VNode的tag、key、isComment都相同
-  2、同时定义或未定义data的时候
-  3、若标签为input则type必须相同
+  1. 两个VNode的tag、key、isComment都相同
+  2. 同时定义或未定义data的时候
+  3. 若标签为input则type必须相同
   ``` javascript
 	function sameVnode (a, b) {
 	  return (
@@ -104,11 +104,11 @@ patch 判断两vnode是否为同一节点，需要深层次比对，若是进行
 
 两节点比较
 patchVnode的规则:
-1.如果新旧VNode都是静态的，同时它们的key相同（代表同一节点），并且新的VNode是clone或者是标记了once（标记v-once属性，只渲染一次），那么只需要替换elm以及componentInstance即可。
-2.新老节点均有children子节点，则对子节点进行diff操作，调用updateChildren，这个updateChildren也是diff的核心。
-3.如果老节点没有子节点而新节点存在子节点，先清空老节点DOM的文本内容，然后为当前DOM节点加入子节点。
-4.当新节点没有子节点而老节点有子节点的时候，则移除该DOM节点的所有子节点。
-5.当新老节点都无子节点的时候，只是文本的替换。
+1. 如果新旧VNode都是静态的，同时它们的key相同（代表同一节点），并且新的VNode是clone或者是标记了once（标记v-once属性，只渲染一次），那么只需要替换elm以及componentInstance即可。
+2. 新老节点均有children子节点，则对子节点进行diff操作，调用updateChildren，这个updateChildren也是diff的核心。
+3. 如果老节点没有子节点而新节点存在子节点，先清空老节点DOM的文本内容，然后为当前DOM节点加入子节点。
+4. 当新节点没有子节点而老节点有子节点的时候，则移除该DOM节点的所有子节点。
+5. 当新老节点都无子节点的时候，只是文本的替换。
 ``` javascript
 
      function patchVnode(oldVnode, vnode) {
@@ -139,11 +139,12 @@ patchVnode的规则:
 	}
 ```
 
- ** 核心内容 **
- updateChildren
+ ** 核心内容 updateChildren **  
+ 
  分为设置key和不设置key两种方式：
-  1.不设key，newCh和oldCh只会进行头尾两端的相互比较
-  2.设key，从用key生成的对象oldKeyToIdx中查找匹配的节点，通过查找、移动节点以更高效的利用dom，不会出现不必要的删除和新建节点
+  1. 不设key，newCh和oldCh只会进行头尾两端的相互比较
+  2. 设key，从用key生成的对象oldKeyToIdx中查找匹配的节点，通过查找、移动节点以更高效的利用dom，不会出现不必要的删除和新建节点  
+  
  目前是两种方式结合，当头尾两端没查找到与`newStartIdx`相匹配的节点，则为oldCh节点设置key      
 
 ``` javascript
@@ -285,7 +286,8 @@ patchVnode的规则:
   
   
 ## 其他 （react & vue diff区别）
- react是批量更新Component，做完整个Diff之后再做DOM操作。
+ react是批量更新Component，做完整个Diff之后再做DOM操作；  
+ 
  Vue是即时移动或操作DOM，需要两个数组维护startIndex 和 endIndex
  
  
