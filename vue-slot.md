@@ -10,7 +10,7 @@
    提供的组件带有一个可以从子组件获取数据的可复用的插槽，可以将所有和其上下文相关的数据传递给这个插槽
 
 #### 匿名插槽和具名插槽
-    ```
+```
     // 子组件 child-template
 		<div class="container">
       <header>
@@ -45,10 +45,10 @@
 		    I am footer
 		  </template>
 		</child-template>
-    ```
+```
 
 #### 作用域插槽
-    ```
+```
 		// 子组件
 		<ul>
 		    <li
@@ -60,8 +60,8 @@
 		        </slot>
 		    </li>
 		</ul>
-    ```
-    ```
+```
+```
 		// 父组件
 		<todo-list v-bind:todos="todos">
 		  <!-- 将 `slotProps` 定义为插槽作用域的名字 -->
@@ -83,7 +83,9 @@
 		    {{ todo.text }}
 		  </template>
 		</todo-list>
-    ```
+```
     
-**ps: 详细内容可参考 官网：[插槽 https://cn.vuejs.org/v2/guide/components-slots.html](https://cn.vuejs.org/v2/guide/components-slots.html)
-以及之前的一篇blog [vue2.0 之 slot 内容分发](https://www.cnblogs.com/136asdxxl/p/8337551.html)**
+**ps:   
+此文只记录了自己最常用的插槽使用，大多数用在组件封装，在 Element-UI 中大量使用  
+我在之前的一篇blog [vue2.0 之 slot 内容分发](https://www.cnblogs.com/136asdxxl/p/8337551.html)，也有相关记录  
+更多关于插槽的功能，可查阅官网：[插槽 https://cn.vuejs.org/v2/guide/components-slots.html](https://cn.vuejs.org/v2/guide/components-slots.html)**
