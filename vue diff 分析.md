@@ -3,7 +3,7 @@
 ### 名词解释
  1. `虚拟DOM` （virtual DOM）就是在js中模拟DOM对象树来优化DOM操作的一种技术或思路。
  2. `DOM` (document object model) 文档对象模型，在浏览器中可通过 js 来操作DOM
- 3. `VNode` 可以理解为vue框架的虚拟dom的基类，通过 new 实例化得到 VNode对象
+ 3. `VNode` 可以理解为vue框架的虚拟dom的基类，通过 new 实例化得到 VNode对象；VNode 对真实DOM的一层抽象，以JavaScript对象描述真实DOM
 
 VNode对象 主要包括一下属性:
 * `tag`: 当前节点的标签名
@@ -282,8 +282,38 @@ patchVnode的规则:
 	}
   ```
   
-  详细流程图（自己画的）
+## 总结
+### 详细流程图（自己画的）
   ![diff-flow](/img/vue-diff.png)
+  
+### 整体流程概述
+Vue通过数据绑定来修改视图，当某个数据被修改的时候，set方法会让闭包中的Dep调用notify通知所有订阅者Watcher，Watcher通过get方法执行`vm._update(vm._render(), hydrating)`来更新视图。  
+
+`vm._render()`会生成新的VNode，在内部会将该VNode对象与之前旧的VNode对象进行`__patch__`
+
+patch将新老VNode节点进行比对，然后将根据两者的比较结果进行最小单位地修改视图，而不是将整个视图根据新的VNode重绘。patch的核心在于diff算法，这套算法可以高效地比较virtual DOM的变更，得出变化以修改视图。  
+
+#### patch 过程  
+当oldVnode与vnode在sameVnode的时候才会进行patchVnode，也就是新旧VNode节点判定为同一节点的时候才会进行patchVnode这个过程，否则就是创建新的DOM，移除旧的DOM。 
+
+#### patchVnode 过程
+1. 如果新旧VNode都是静态的，同时它们的key相同（代表同一节点），并且新的VNode是clone或者是标记了once（标记v-once属性，只渲染一次），那么只需要替换elm以及componentInstance即可。
+2. 新老节点均有children子节点，则对子节点进行diff操作，调用updateChildren，这个updateChildren也是diff的核心。
+3. 如果老节点没有子节点而新节点存在子节点，先清空老节点DOM的文本内容，然后为当前DOM节点加入子节点。
+4. 当新节点没有子节点而老节点有子节点的时候，则移除老节点（当前节点）的所有子节点。
+5. 当新老节点都无子节点的时候，只是文本的替换。  
+
+#### updateChildren 过程
+**对子节点进行diff，分为设置key和不设置key两种情况**  
+
+概括为：oldCh和newCh各有两个头尾的变量StartIdx和EndIdx，它们的2个变量相互比较，一共有4种比较方式。如果4种比较都没匹配，如果设置了key，就会用key进行比较，在比较的过程中，变量会往中间靠，一旦StartIdx>EndIdx表明oldCh和newCh至少有一个已经遍历完了，就会结束比较。  
+
+具体比对有以下几种情况：
+1. 若 sameVNode(newStartVnode, oldStartVnode)，newStartIdx, oldStartIdx 指针分别后移+1
+2. 若 sameVNode(newEndVnode, oldEndVnode)，newEndIdx, oldEndIdx 指针分别前移-1
+3. 若 sameVNode(newStartVnode, oldEndVnode)，oldEndVnode 移动到 oldStartVnode 之前，同时 oldEndIdx--，newStartIdx++
+4. 若 sameVNode(newEndVnode, oldStartVnode)，oldStartVnode移动到 oldEndVnode 之后，同时 oldStartIdx++，newEndIdx--
+5. 以上都不符合，为oldCh设置key，newStartIdx从中找出具有相同key的节点，找到后，进行patchVnode，否则生成新的节点
   
   
 ## 其他 （react & vue diff区别）
