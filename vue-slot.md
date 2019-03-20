@@ -11,8 +11,8 @@
 
 #### 匿名插槽和具名插槽
 ```
-    // 子组件 child-template
-		<div class="container">
+// 子组件 child-template
+<div class="container">
       <header>
         <slot name="header"></slot>
       </header>
@@ -22,67 +22,85 @@
       <footer>
         <slot name="footer"></slot>
       </footer>
-    </div>
+</div>
     
-    // 父组件
-    <child-template>
-		  <template slot="header">
-		    I am header
-		  </template>
-      <span>匿名插槽</span>
-      <template slot="footer">
-		    I am footer
-		  </template>
-		</child-template>
     
-    ** 2.6.0之后的写法，下面同是，把 `slot-scope` 改为 `v-slot` **
-    <child-template>
-		  <template v-slot:header>
-		    I am header
-		  </template>
-      <span>匿名插槽</span>
-      <template v-slot:footer>
-		    I am footer
-		  </template>
-		</child-template>
+// 父组件
+<child-template>
+  <template slot="header">
+    I am header
+  </template>
+  <span>匿名插槽</span>
+  <template slot="footer">
+    I am footer
+  </template>
+</child-template>
+    
+** 以下是 `2.6.0` 之后的写法，下面同是，把 `slot-scope` 改为 `v-slot` **
+<child-template>
+  <template v-slot:header>
+    I am header
+  </template>
+  <span>匿名插槽</span>
+  <template v-slot:footer>
+    I am footer
+  </template>
+</child-template>
 ```
 
 #### 作用域插槽
 ```
-		// 子组件
-		<ul>
-		    <li
-		        v-for="todo in todos"
-		      	:key="todo.id"
-		     >
-		        <slot :todo="todo">
-		        {{todo.txt}}
-		        </slot>
-		    </li>
-		</ul>
-```
-```
-		// 父组件
-		<todo-list v-bind:todos="todos">
-		  <!-- 将 `slotProps` 定义为插槽作用域的名字 -->
-		  <template slot-scope="scope">
-		    <!-- 为待办项自定义一个模板，-->
-		    <!-- 通过 `slotProps` 定制每个待办项。-->
-		    <span v-if="scope.todo.isComplete">✓</span>
-		    {{ scope.todo.text }}
-		  </template>
-		</todo-list>
+// 子组件 todo-list
+js:
+...
+props: {
+  // 父组件传递过来的数据
+  todoList: []
+}
+....
 
-		// 或者使用解构
-		<todo-list v-bind:todos="todos">
-		  <!-- 将 `slotProps` 定义为插槽作用域的名字 -->
-		  <template slot-scope="{todo}">
-		    <!-- 为待办项自定义一个模板，-->
-		    <!-- 通过 `slotProps` 定制每个待办项。-->
-		    <span v-if="todo.isComplete">✓</span>
-		    {{ todo.text }}
-		  </template>
-		</todo-list>
+template:
+<ul>
+    <li
+	v-for="todo in todoList"
+	:key="todo.id"
+     >
+	<slot :todo="todo"></slot>
+    </li>
+</ul>
+```
+```
+// 父组件
+js: 
+...
+data () {
+  return {
+    todos: [] //传递给子组件
+  }
+}
+...
+
+template: 
+...
+<todo-list v-bind:todoList="todos">
+  <!--将包含所有插槽 prop 的对象命名为`scope`-->
+  <template slot-scope="scope">
+    <span v-if="scope.todo.isComplete">✓</span>
+    {{ scope.todo.text }}
+  </template>
+</todo-list>
+....
+
+// 或者使用解构
+...
+<todo-list v-bind:todos="todos">
+  <!--将包含所有插槽 prop 的对象命名为`scope`，通过解构赋值，解构出对应的prop数据，此处为 todo-->
+  <template slot-scope="{todo}">
+    <span v-if="todo.isComplete">✓</span>
+    {{ todo.text }}
+  </template>
+</todo-list>
+...
 ```
     
 **ps:   
