@@ -1,4 +1,5 @@
 # vue Diff算法 
+传统的diff算法，为了找到最小变化，需要逐层的去搜索（深度优先遍历）比较，时间复杂度将会达到 O(n^3)的级别，代价十分高，考虑到节点变化很少是跨层次的，vue2.0借鉴[snbbdom](https://github.com/snabbdom/snabbdom) (一个高效、简单的Virtual Dom library)，只比较同层节点；如果不同，那么即使该节点的子节点没变化，我们也不复用，直接将从父节点开始的子树全部删除，然后再重新创建节点添加到新的位置。如果父节点没变化，我们就比较所有同层的子节点，对这些子节点进行删除、创建、移位操作。
 
 ### 名词解释
  1. `虚拟DOM` （virtual DOM）就是在js中模拟DOM对象树来优化DOM操作的一种技术或思路。
@@ -17,6 +18,7 @@ VNode对象 主要包括一下属性:
 * `isStatic`: 静态节点的标识
 * `isRootInsert`: 是否作为根节点插入，被<transition>包裹的节点，该属性的值为false
 * `isComment`: 当前节点是否是注释节点
+具体可参考源码[vue 中的 Vnode](https://github.com/vuejs/vue/blob/dev/src/core/vdom/vnode.js) （ps: snabbdom 中的 Vnode 更简单，没有vue 中的那没多属性 https://github.com/snabbdom/snabbdom/blob/master/src/vnode.ts)
 
 
 **主要过程：patch -> patchVnode -> updateChildren**
@@ -93,14 +95,29 @@ patch 判断两vnode是否为同一节点，需要深层次比对，若是进行
      }
   ```
   
-  简单版（主要关注的属性，未考虑复杂场景）
-  ``` javascript
+ 【snabbdom】
+`sameVnode` 比较两节点是否相同（相似）
+``` javascript
   function sameVnode(oldVnode, vnode) {
 	if (oldVnode.key === vnode.key && oldVnode.elm === vnode.elm) {
 		return true
 	}
   }
-  ```
+```
+
+ `createKeyToOldIdx` 将oldvnode数组中位置对oldvnode.key的映射转换为oldvnode.key
+对位置的映射（生成oldvnode.key对位置的映射）
+``` javascript
+	function createKeyToOldIdx(children, beginIdx, endIdx) {
+	  var i, map = {}, key;
+	  for (i = beginIdx; i <= endIdx; ++i) {
+	    key = children[i].key;
+	    if (isDef(key)) map[key] = i;
+	  }
+	  return map;
+	}
+ ```
+  
 
 两节点比较
 patchVnode的规则:
@@ -141,11 +158,10 @@ patchVnode的规则:
 
  ** 核心内容 updateChildren **  
  
- 分为设置key和不设置key两种方式：
+ 主要分为设置key和不设置key两种方式：
   1. 不设key，newCh和oldCh只会进行头尾两端的相互比较
   2. 设key，从用key生成的对象oldKeyToIdx中查找匹配的节点，通过查找、移动节点以更高效的利用dom，不会出现不必要的删除和新建节点  
-  
- 目前是两种方式结合，当头尾两端没查找到与`newStartIdx`相匹配的节点，则为oldCh节点设置key      
+  当头尾两端没查找到与`newStartIdx`相匹配的节点，则为oldCh节点设置key      
 
 ``` javascript
 	updateChildren (parentElm, oldCh, newCh) {
@@ -231,7 +247,7 @@ patchVnode的规则:
 }
 ```
   
-  一些主要的 DOM API 操作，参考aooy的代码，实际上是DOM API 的封装
+  一些主要的 DOM API 操作，参考aooy的代码，实际上是DOM API 的封装，具体可参考 `snabbdom/vue`中关于patch部分 dom 操作API
   ``` javascript
 	api.createElement = function (tag) {
 		return document.createElement(tag)
@@ -309,11 +325,20 @@ patch将新老VNode节点进行比对，然后将根据两者的比较结果进�
 概括为：oldCh和newCh分别设置两个头尾的变量StartIdx和EndIdx，它们的2个变量相互比较，一共有2x2=4种比较方式。如果4种比较都没匹配，如果设置了key，就会用key进行比较，在比较的过程中，变量从两端向中间移动，一旦StartIdx>EndIdx表明oldCh和newCh至少有一个已经遍历完了，就会结束比较。  
 
 具体比对有以下几种情况：
-1. 若 sameVNode(newStartVnode, oldStartVnode)，newStartIdx, oldStartIdx 指针分别后移+1
-2. 若 sameVNode(newEndVnode, oldEndVnode)，newEndIdx, oldEndIdx 指针分别前移-1
-3. 若 sameVNode(newStartVnode, oldEndVnode)，oldEndVnode 移动到 oldStartVnode 之前，同时 oldEndIdx--，newStartIdx++
-4. 若 sameVNode(newEndVnode, oldStartVnode)，oldStartVnode移动到 oldEndVnode 之后，同时 oldStartIdx++，newEndIdx--
-5. 以上都不符合，为oldCh设置key，newStartIdx从中找出具有相同key的节点，找到后，进行patchVnode，否则生成新的节点
+1. 若 sameVNode(newStartVnode, oldStartVnode)，patchVnode(newStartVnode, oldStartVnode)，同时newStartIdx, oldStartIdx 指针分别后移+1
+2. 若 sameVNode(newEndVnode, oldEndVnode)，patchVnode(newEndVnode, oldEndVnode)，同时newEndIdx, oldEndIdx 指针分别前移-1
+3. 若 sameVNode(newStartVnode, oldEndVnode)，patchVnode(newStartVnode, oldEndVnode)，同时oldEndVnode 移动到 oldStartVnode 之前，同时 oldEndIdx--，newStartIdx++
+4. 若 sameVNode(newEndVnode, oldStartVnode)，patchVnode(newEndVnode, oldStartVnode)，同时oldStartVnode移动到 oldEndVnode 之后， oldStartIdx++，newEndIdx--
+5. 以上都不符合，判断是否有为oldCh设置key，若没有，则设置，newStartIdx从中找出具有相同key的节点，找到后，进行patchVnode，否则生成新的节点
+
+
+最后简单描述：
+**************************
+1. patch只需要对两个vnode进行判断是否相似，如果相似，则对他们进行
+patchVnode操作，否则直接用vnode替换oldvnode；
+2. patchVnode进一步比较两个vnode，如果两节点都有子节点，则对他们的子节点进行updateChildren操作，对这些子节点进行删除、创建、移位操作，否则新建新子节点，或者是删除已有的子节点；
+3. updateChildren 通过创建四个新旧节点的头尾索引，从新旧子节点头尾两端向中间推进对比，若相同，则进行patchVnode
+**************************
   
   
 ## 其他 （react & vue diff区别）
