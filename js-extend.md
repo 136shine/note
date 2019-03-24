@@ -432,8 +432,8 @@ var child1 = new Child()
 
 
 参考：
-[两张图看懂ES5和ES6中的继承，值得收藏](https://baijiahao.baidu.com/s?id=1593627663270143849&wfr=spider&for=pc)
-[一篇文章理解JS继承——原型链/构造函数/组合/原型式/寄生式/寄生组合/Class extends](https://segmentfault.com/a/1190000015727237)
-[ES6类以及继承的实现原理](https://segmentfault.com/a/1190000014798678)
-[ES6中的继承剖析](https://www.cnblogs.com/kable/p/5705552.html)
-[如何继承Date对象？由一道题彻底弄懂JS继承](https://segmentfault.com/a/1190000012841509#articleHeader14)
+* [两张图看懂ES5和ES6中的继承，值得收藏](https://baijiahao.baidu.com/s?id=1593627663270143849&wfr=spider&for=pc)
+* [一篇文章理解JS继承——原型链/构造函数/组合/原型式/寄生式/寄生组合/Class extends](https://segmentfault.com/a/1190000015727237)
+* [ES6类以及继承的实现原理](https://segmentfault.com/a/1190000014798678)
+* [ES6中的继承剖析](https://www.cnblogs.com/kable/p/5705552.html)
+* [如何继承Date对象？由一道题彻底弄懂JS继承](https://segmentfault.com/a/1190000012841509#articleHeader14)
